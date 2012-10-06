@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Nata gallery</title>
+    <link rel="stylesheet" type="text/css" href="css/demo.css"/>
+    <link type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet"/>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+    <script type="text/javascript">
+        $(function($){
+            $('.input-label > label').click(function(){
+                $(this).siblings().filter('input').focus();
+            });
+
+            $('.input-label > input').focusin(function(){
+                $label = $(this).siblings().filter('label');
+                $label.hide();
+            });
+
+            $('.input-label > input').focusout(function(){
+                $label = $(this).siblings().filter('label');
+                if (!$(this).val()) $label.show();
+            });
+
+            $('#submit').click(function(){
+                var formData = new FormData();
+                formData.append('username', $('#username').val());
+                formData.append('password', $('#password').val());
+                $.ajax({
+                    url: '/login',  //server script to process data
+                    type: 'POST',
+                    /*
+                     //Ajax events
+                     beforeSend: beforeSendHandler,
+                     */
+                    // Form data
+                    data: formData,
+                    error: function(){
+                        $('.loginForm').effect("shake", {times:3}, 100);
+                    },
+                    success: function(){
+                        window.location.replace('/');
+                    },
+                    //Options to tell JQuery not to process data or worry about content-type
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="container">
+    <div class="content">
+        <h1>Галерея работ, эскизов и просто картинок Терновых Наталии</h1>
+    </div>
+    <div class="loginForm">
+        <div class="input-label">
+            <input type="text" id="username" name="username"/>
+            <label>Имя пользователя</label>
+        </div>
+        <div class="input-label">
+            <input type="password" id="password" name="password"/>
+            <label>Пароль</label>
+        </div>
+        <div class="input-label">
+            <input type="Submit" id="submit" value="Log in"/>
+        </div>
+    </div>
+</div>
+</body>
+</html>
