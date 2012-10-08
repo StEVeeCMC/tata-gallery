@@ -1,21 +1,38 @@
-var http        = require('http'),
-    express     = require('express'),
-    params      = require('express-params'),
-    app         = express(),
-    server      = http.createServer(app),
-    port        = 8888,
-    passport    = require('passport'),
+var http            = require('http'),
+    express         = require('express'),
+    params          = require('express-params'),
+    app             = express(),
+    server          = http.createServer(app),
+    port            = 8888,
+    passport        = require('passport'),
     LocalStrategy   = require('passport-local').Strategy,
     flash           = require('connect-flash'),
     gm              = require('gm'),
     fs              = require('fs'),
     uploadDir       = __dirname + '/tmp/',
     collectionsDir  = __dirname + '/../public/img/collections/',
-    thumbsDir       = __dirname + '/../public/img/thumbs/';
+    thumbsDir       = __dirname + '/../public/img/thumbs/',
+    log4js          = require('log4js');
+
+log4js.configure({
+    appenders: [
+        { type: 'console', category: 'logFile'},
+        {
+            type: 'file',
+            filename: './logs/server-tata.log4js.log',
+            category: 'logFile',
+            maxLogSize: 10*1024*1024*1024,
+            backups: 5
+        }
+    ]
+});
+
+var logger = log4js.getLogger('logFile');
+logger.setLevel('DEBUG');
 
 var users = [
-    {id:1,  username:'tata',     password:'astaharsa'},
-    {id:2,  username:'eugene',   password:'astaharsa'}
+    {id:1,  username:'admin',   password:'password'},
+    {id:2,  username:'user',    password:'password'}
 ];
 
 function findById(id, fn) {
@@ -79,6 +96,7 @@ passport.use(new LocalStrategy(
 
 params.extend(app);
 app.configure(function() {
+    app.use(log4js.connectLogger(logger, { level: log4js.levels.DEBUG }));
     app.use(express.bodyParser({uploadDir: uploadDir}));
     app.use(express.cookieParser());
     app.use(express.session({secret: 'tata-server'}));
@@ -134,19 +152,19 @@ function ensureAuthenticated(req, res, next) {
 
 app.post('/upload', function (request, response, next) {
     if (!request.user) {
-        console.log('There is no right to upload images');
+        logger.debug('There is no right to upload images');
         return;
     }
-    console.log("Upload Request is called.");
+    logger.debug("Upload Request is called.");
 
     function makeThumbnail(file, thumbPath, thumbSide) {
-        console.log('Thumbs full view image "%s"', file.name);
+        logger.debug('Thumbs full view image "%s"', file.name);
         gm(file.path).size(function (err, value) {
             if (err != null) {
-                console.log(err.message);
+                logger.debug(err.message);
                 return;
             }
-            console.log('Full view image "%s" dimensions: %d x %d', file.name, value.width, value.height);
+            logger.debug('Full view image "%s" dimensions: %d x %d', file.name, value.width, value.height);
             var width = value.width;
             var height = value.height;
             var sideMin = Math.min(width, height);
@@ -155,10 +173,10 @@ app.post('/upload', function (request, response, next) {
 //                .crop(sideMin, sideMin, (width - sideMin) / 2, (height - sideMin) / 2)
                 .thumb(thumbSide, thumbSide, thumbPath, thumbQuality, function (err) {
                     if (err != null) {
-                        console.log(err.message);
+                        logger.debug(err.message);
                         return
                     }
-                    console.log('Full view image "%s" was successfully thumbed', file.name);
+                    logger.debug('Full view image "%s" was successfully thumbed', file.name);
                 });
         });
     }
@@ -178,13 +196,13 @@ app.post('/upload', function (request, response, next) {
                 if (!fs.existsSync(thumbViewDir)) {
                     fs.mkdirSync(thumbViewDir);
                 }
-                console.log('Creating full view image "%s" for collection "%s"', file.name, collectionName);
+                logger.debug('Creating full view image "%s" for collection "%s"', file.name, collectionName);
                 fs.writeFile(fullViewPath, data, function (err) {
                     if (err != null) {
-                        console.log(err.message);
+                        logger.debug(err.message);
                         return;
                     }
-                    console.log('Full view image "%s" was successfully created', file.name);
+                    logger.debug('Full view image "%s" was successfully created', file.name);
                     makeThumbnail(file, thumbViewPath, thumbSide);
                 });
             });
@@ -203,13 +221,13 @@ app.post('/upload', function (request, response, next) {
         saveFile(request.files.upload, collectionName);
     }
 
-    console.log('Upload request was successfully parsed');
+    logger.debug('Upload request was successfully parsed');
     response.end();
 });
 
 
 app.get('/struct', function (request, response, next) {
-    console.log('Get collections list request');
+    logger.debug('Get collections list request');
     var collectionsFolders = fs.readdirSync(collectionsDir);
     var result = {};
     for (var i = 0; i < collectionsFolders.length; i++) {
@@ -221,28 +239,28 @@ app.get('/struct', function (request, response, next) {
 
 app.get('/remove/:collectionName/:fileName', function (request, response, next) {
     if (!request.user) {
-        console.log("There are no rights to remove image!")
+        logger.debug("There are no rights to remove image!")
         return;
     }
     var collectionName = request.params.collectionName;
     var fileName = request.params.fileName;
     if ((collectionName + '').length === 0 || (fileName + '').length === 0) return;
-    console.log('Get request to remove image "%s" from collection "%s"', fileName, collectionName);
+    logger.debug('Get request to remove image "%s" from collection "%s"', fileName, collectionName);
     if (fs.existsSync(collectionsDir + collectionName + '/' + fileName))
         fs.unlink(collectionsDir + collectionName + '/' + fileName, function (err) {
             if (err != null) {
-                console.log(err.message);
+                logger.debug(err.message);
                 return;
             }
-            console.log('Image "%s" was successfully removed from collection "%s"', fileName, collectionName);
+            logger.debug('Image "%s" was successfully removed from collection "%s"', fileName, collectionName);
         });
     if (fs.existsSync(thumbsDir + collectionName + '/' + fileName))
         fs.unlink(thumbsDir + collectionName + '/' + fileName, function (err) {
             if (err != null) {
-                console.log(err.message);
+                logger.debug(err.message);
                 return;
             }
-            console.log('Thumb "%s" was successfully removed from collection "%s"', fileName, collectionName);
+            logger.debug('Thumb "%s" was successfully removed from collection "%s"', fileName, collectionName);
         });
 });
 
