@@ -82,7 +82,10 @@ h1 span {
 }
 
 .content {
-    margin: 0px 25px 30px 25px;
+    max-width: 800px;
+    margin: auto;
+    padding-left: 25px;
+    padding-right: 25px;
 }
 
 @media screen and (max-width: 640px) {
