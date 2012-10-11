@@ -175,7 +175,7 @@ function createNewGallery($rgGallery, isAdmin) {
                     })
 
                     $removeControl.bind('click.rgGallery', function (event) {
-                        var isItLast = itemsCount() === 1;
+                        var isItLast = itemsCount() == 1;
                         // Remove item
                         $.get('/remove/' + collectionName() + '/' + fileName());
                         refreshNeeded = true;
