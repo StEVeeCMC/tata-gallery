@@ -175,16 +175,16 @@ function createNewGallery($rgGallery, isAdmin) {
                     })
 
                     $removeControl.bind('click.rgGallery', function (event) {
-                        if (itemsCount() > 1) {
+                        // Remove item
+                        $.get('/remove/' + collectionName() + '/' + fileName());
+                        refreshNeeded = true;
+                        $items().eq(current).remove();
+                        if (itemsCount() > 0) {
                             _navigate('left');
                         } else {
                             // There are no images so remove entire collection
                             $rgGallery.remove();
                         }
-                        // Remove item
-                        $.get('/remove/' + collectionName() + '/' + fileName());
-                        refreshNeeded = true;
-                        $items().eq(current).remove();
                     });
                 }
 
