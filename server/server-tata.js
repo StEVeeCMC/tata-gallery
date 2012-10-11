@@ -249,40 +249,33 @@ app.get('/remove/:collectionName/:fileName', function (request, response, next) 
     var fileName = request.params.fileName;
     if ((collectionName + '').length === 0 || (fileName + '').length === 0) return;
     logger.debug('Get request to remove image "%s" from collection "%s"', fileName, collectionName);
-    if (fs.existsSync(collectionsDir + collectionName + '/' + fileName))
-        fs.unlink(collectionsDir + collectionName + '/' + fileName, function (err) {
-            if (err != null) {
-                logger.debug(err.message);
-                return;
-            }
-            logger.debug('Image "%s" was successfully removed from collection "%s"', fileName, collectionName);
-        });
-    if (fs.existsSync(thumbsDir + collectionName + '/' + fileName))
-        fs.unlink(thumbsDir + collectionName + '/' + fileName, function (err) {
-            if (err != null) {
-                logger.debug(err.message);
-                return;
-            }
-            logger.debug('Thumb "%s" was successfully removed from collection "%s"', fileName, collectionName);
-        });
-    var cFiles = fs.readdirSync(collectionsDir + collectionName);
-    if (cFiles.length === 0){
-        logger.debug('Collection "%s" is empty. It is time to remove it', collectionName);
-        fs.rmdir(collectionsDir + collectionName, function (err) {
-            if (err != null) {
-                logger.debug(err.message);
-                return;
-            }
-            logger.debug('Collection "%s" dir was successfully removed', collectionName);
-        });
-        fs.rmdir(thumbsDir + collectionName, function (err) {
-            if (err != null) {
-                logger.debug(err.message);
-                return;
-            }
-            logger.debug('Thumbs collection "%s" dir was successfully removed', collectionName);
-        });
+
+    function removeImage(rootDir, imageType, collectionName, imageName){
+        if (fs.existsSync(rootDir + collectionName + '/' + imageName))
+            fs.unlink(rootDir + collectionName + '/' + imageName, function (err) {
+                if (err != null) {
+                    logger.debug(err.message);
+                    return;
+                }
+                logger.debug('%s "%s" was successfully removed from collection "%s"', imageType, imageName, collectionName);
+
+                var cFiles = fs.readdirSync(rootDir + collectionName);
+                if (cFiles.length === 0){
+                    logger.debug('%s "%s" dir is empty. It is time to remove it', imageType, collectionName);
+                    fs.rmdir(rootDir + collectionName, function (err) {
+                        if (err != null) {
+                            logger.debug(err.message);
+                            return;
+                        }
+                        logger.debug('%s "%s" dir was successfully removed', imageType, collectionName);
+                    });
+                }
+            });
     }
+
+    removeImage(collectionsDir, "Image", collectionName, fileName);
+    removeImage(thumbsDir, "Thumb", collectionName, fileName);
+
 });
 
 server.listen(port);
