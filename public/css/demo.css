@@ -29,6 +29,8 @@ p.sub {
 
 h1 {
     margin: 5px;
+    margin-left: 25px;
+    margin-right: 25px;
     font-size: 24px;
     text-align: center;
     color: #fff;
@@ -87,6 +89,53 @@ h1 span {
     padding-left: 25px;
     padding-right: 25px;
 }
+
+hr {
+    height: 5px;
+    opacity: 0.33;
+    background-color: #464646;
+    border: #464646;
+}
+
+.footer {
+    max-width: 800px;
+    margin: auto;
+    margin-bottom: 25px;
+    padding-left: 25px;
+    padding-right: 25px;
+    color:
+}
+
+.footer a {
+    display: block;
+    float: right;
+    width: 16px;
+    height: 16px;
+    margin-right: 3px;
+    border: 3px solid #464646;
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+.footer a:hover{
+    opacity: 1.0;
+}
+
+.footer a.login-control {
+    background: #464646 url(../img/login-logout.png) no-repeat top left;
+    background-position: 0px 0px;
+}
+
+.footer a.logout-control {
+    background: #464646 url(../img/login-logout.png) no-repeat top left;
+    background-position: 0px -16px;
+}
+
+.footer a.collection-add {
+    background: #464646 url(../img/collection-controls.png) no-repeat top left;
+    background-position: 0px 0px;
+}
+
 
 @media screen and (max-width: 640px) {
     .header a {

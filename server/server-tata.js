@@ -211,7 +211,10 @@ app.post('/upload', function (request, response, next) {
     }
 
     var nameField = request.param('name');
-    var collectionName = nameField != undefined && nameField != null && nameField.length ? nameField : 'unnamed';
+    var today = new Date();
+    var collectionName = nameField != undefined && nameField != null && nameField.length
+        ? nameField
+        : "collection-" + (today.toDateString() + " " + today.toTimeString().slice(0, 8)).replace(/[ ]/g, "-");
 
     if (Array.isArray(request.files.upload)){
         request.files.upload.forEach(function (file) {

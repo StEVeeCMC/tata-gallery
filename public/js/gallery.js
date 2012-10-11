@@ -169,7 +169,6 @@ function createNewGallery($rgGallery, isAdmin) {
                                     contentType:false,
                                     processData:false
                                 });
-
                             }
                         });
                         $fileInput.click();

@@ -100,7 +100,7 @@
     background-position: 0px 0px;
 }
 
-.rg-gallery input.file {
+input.file {
     position: absolute;
     left:0px;
     height: 1px;
