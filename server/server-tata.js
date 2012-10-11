@@ -265,6 +265,24 @@ app.get('/remove/:collectionName/:fileName', function (request, response, next) 
             }
             logger.debug('Thumb "%s" was successfully removed from collection "%s"', fileName, collectionName);
         });
+    var cFiles = fs.readdirSync(collectionsDir + collectionName);
+    if (cFiles.length === 0){
+        logger.debug('Collection "%s" is empty. It is time to remove it', collectionName);
+        fs.rmdir(collectionsDir + collectionName, function (err) {
+            if (err != null) {
+                logger.debug(err.message);
+                return;
+            }
+            logger.debug('Collection "%s" dir was successfully removed', collectionName);
+        });
+        fs.rmdir(thumbsDir + collectionName, function (err) {
+            if (err != null) {
+                logger.debug(err.message);
+                return;
+            }
+            logger.debug('Thumbs collection "%s" dir was successfully removed', collectionName);
+        });
+    }
 });
 
 server.listen(port);
