@@ -6,6 +6,9 @@ mongodb = require 'mongodb'
 # Run start in check client with passing cb to getCollection =>
 # DO refactoring of depending logic
 start = (cb) =>
+  if DBUtils.client
+    cb null if cb
+    return
   server = new mongodb.Server "127.0.0.1", 27017, {}
   new mongodb.Db('test', server, {}).open (err, client) =>
     console.log "Setting up db client"
@@ -14,6 +17,7 @@ start = (cb) =>
       return
     DBUtils.setClient client
     cb null if cb
+
 
 
 #  Example of using db module
@@ -77,14 +81,14 @@ class DBUtils
 
 
 class ImgCollection
-  _id  : null
-  name : null
-  description : null
-  dbCollection: null
-  images : []
-  loaded   : false
 
   constructor: (@name, @description) ->
+    @_id          = null
+    @dbCollection = null
+    @images       = []
+    @loaded       = false
+
+  isEmpty: () -> @images.length == 0
 
   getDBCollection: ->
     if @dbCollection?
@@ -122,6 +126,7 @@ class ImgCollection
     if @isPersisted()
       @update cb
     else
+      ImgCollection.addCollection @
       @insert cb
     @
 
@@ -143,17 +148,27 @@ class ImgCollection
               cb err if cb?
             else
               console.log "Collection '#{@name}' was fully removed from db"
+              ImgCollection.removeCollection @
               cb null if cb?
     @
 
   addImage: (image, cb) ->
+    console.log "Add image '#{image.name}' to collection '#{@name}'"
     @images.push image
     image.insertTo @, cb
     @
 
   removeImage: (image, cb) ->
-    @images = _.filter @images, (img) => img == image
-    image.removeFrom @, cb
+    console.log "Remove image '#{image.name}' from collection '#{@name}'"
+    image.removeFrom @, (err) =>
+      if err
+        cb err if cb
+        return
+      @images = _.filter @images, (img) => img != image
+      if @isEmpty()
+        @remove (err) => cb err if cb
+      else
+        cb null if cb
     @
 
   clone: (imgCollection) ->
@@ -174,6 +189,12 @@ class ImgCollection
   @collections: []
   @collectionsNum : null
 
+  @addCollection: (collection) ->
+    @collections.push collection
+
+  @removeCollection: (collection) ->
+    @collections = _.filter @collections, (c) => c != collection
+
   @areAllCollectionsLoaded: ->
     @collections.length == @collectionsNum && _.all @collections, (collection) => collection.loaded
 
@@ -188,21 +209,20 @@ class ImgCollection
         @collections = []
         @collectionsNum = objects.length
 
-        _.each objects, (object) =>
-          newImgCollection = (new ImgCollection).clone(object)
-          newImgCollection.getCollectionImages (err) =>
-            @collections.push newImgCollection
-            if @areAllCollectionsLoaded()
-              cb null, @collections if cb?
+        if @collectionsNum == 0
+          cb null, @collections if cb
+        else
+          _.each objects, (object) =>
+            newImgCollection = (new ImgCollection).clone(object)
+            newImgCollection.getCollectionImages (err) =>
+              @collections.push newImgCollection
+              if @areAllCollectionsLoaded()
+                cb null, @collections if cb
 
 class Image
-  name     : null
-  imageURL : null
-  thumbURL : null
-  date     : Date.now()
 
   constructor: (@name, @imageURL, @thumbURL, date) ->
-    @date = date if date?
+    @date = if date? then date else Date.now()
 
   toJSON: ->
     imageURL  : @imageURL

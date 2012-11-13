@@ -64,7 +64,7 @@ params.extend app
 
 
 app.configure () =>
-  app.use log4js.connectLogger(logger, level: log4js.levels.DEBUG)
+#  app.use log4js.connectLogger(logger, level: log4js.levels.DEBUG)
   app.use express.bodyParser(uploadDir: uploadDir)
   app.use express.cookieParser()
   app.use express.session(secret: 'tata-server')
@@ -121,6 +121,10 @@ dateSuffix = () =>
 
 defaultCollectionName = () => "collection-" + dateSuffix()
 
+getFileURLHash = (fileName) => crypto.createHash('md5').update(fileName + dateSuffix()).digest("hex")
+
+getAllCollections = () => db.ImgCollection.collections
+
 
 app.post '/upload', (request, response, next) =>
   logger.debug "Upload Request is called."
@@ -130,33 +134,25 @@ app.post '/upload', (request, response, next) =>
 
   collectionName = request.param 'name'
   unless collectionName && collectionName.length
-    collectionName = defaultCollectionName()
-    collection = new db.ImgCollection collectionName
+    collection = new db.ImgCollection defaultCollectionName()
   else
-    collection = _.find collections, (collection) => collection.name == collectionName
+    collection = _.find getAllCollections(), (c) => c.name == collectionName
+    return response.end() unless collection
 
-  if Array.isArray request.files.upload
-    processedCount = request.files.upload.length
-    request.files.upload.forEach (file) =>
-      fileName = crypto.createHash('md5').update(file.name + dateSuffix()).digest("hex")
-      imgProcessing.saveFile file, fileName, (err) =>
-        unless err
-          image = new db.Image file.name, fileName, fileName
-          collection.addImage image
-        if !(--processedCount)
-          collection.save () =>
-            collections.push collection
-            response.end()
-  else
-    file = request.files.upload
-    fileName = crypto.createHash('md5').update(file.name + dateSuffix()).digest("hex")
-    imgProcessing.saveFile file, fileName, (err) =>
-      image = new db.Image file.name, fileName, fileName
-      collection.addImage image, () =>
-        collection.save () =>
-          collections.push collection
-          response.end()
+  unless Array.isArray request.files.upload
+    request.files.upload = [request.files.upload]
 
+  files = request.files.upload
+  filesNumber = files.length
+  files.forEach (uploadedFile) =>
+    return logger.debug "WARNING: uploaded file has no name" unless uploadedFile.name && uploadedFile.name.length
+    fileURL = getFileURLHash uploadedFile.name
+    imgProcessing.saveFile uploadedFile, fileURL, (err) =>
+      unless err
+        image = new db.Image uploadedFile.name, fileURL, fileURL
+        collection.addImage image
+      if !(--filesNumber)
+        collection.save () => response.end()
 
 app.get '/remove/:collectionName/:fileName', (request, response) =>
   if !request.user
@@ -164,37 +160,42 @@ app.get '/remove/:collectionName/:fileName', (request, response) =>
     return
 
   collectionName = request.params.collectionName
-  imageName = request.params.fileName
-  if (collectionName + '').length == 0 || (imageName + '').length == 0
-    logger.error 'Collection name or file name is emprty'
+  imageURL = request.params.fileName
+  if (collectionName + '').length == 0 || (imageURL + '').length == 0
+    logger.error 'Collection name or file name is empty'
     return
-  logger.debug 'Get request to remove image "%s" from collection "%s"', imageName, collectionName
-  imgProcessing.removeImage "", imageName
-  imgProcessing.removeThumb "", imageName
 
+  logger.debug 'Get request to remove image "%s" from collection "%s"', imageURL, collectionName
 
+  collection = _.find getAllCollections(), (collection) => collection.name == collectionName
+  return response.end() unless collection
+  logger.debug "Collection '#{collectionName}' was found"
+
+  image = _.find collection.images, (image) => image.imageURL == imageURL
+  return response.end() unless image
+  logger.debug "Image '#{imageURL}' was found"
+
+  collection.removeImage image, (err) =>
+    return response.end() if err
+    logger.debug "Image '#{image.imageURL}' (#{image.name}) was successfully removed"
+    imgProcessing.removeImage image.imageURL
+    imgProcessing.removeThumb image.thumbURL
 
 app.get '/struct', (request, response) =>
   logger.debug 'Get collections list request'
-#  response.send imgProcessing.getStructureSync()
   result = {}
-  for collection in collections
+  for collection in getAllCollections()
     result[collection.name] = []
+    logger.debug "+ #{collection.name} (#{collection.images.length})"
     for image in collection.images
+      logger.debug "|  #{image.imageURL}"
       result[collection.name].push image.imageURL
   response.send result
 
 
-collections = []
-loadCollections = () =>
-  db.ImgCollection.getImgCollections (err, imgCollections) =>
-    return logger.debug err if err
-    logger.debug "Collections (#{imgCollections.length}):"
-    logger.debug collection.name for collection in imgCollections
-    collections = imgCollections
-    collection.getCollectionImages() for collection in imgCollections
-
-
-db.start loadCollections
-server.listen(port)
+db.start (err) =>
+  return logger.debug "Error: #{err.message}" if err
+  db.ImgCollection.getImgCollections (err) =>
+    return logger.debug "Error: #{err.message}" if err
+    server.listen(port)
 

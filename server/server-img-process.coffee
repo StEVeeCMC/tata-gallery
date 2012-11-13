@@ -72,30 +72,22 @@ saveFile = (file, fileName, cb) =>
       cb new Error "Cannot save file: file '#{file.path}' not found" if cb
 
 
-removeFile = (rootDir, imageType, collectionName, imageName) =>
-  if fs.existsSync(rootDir + collectionName + '/' + imageName)
-    fs.unlink rootDir + collectionName + '/' + imageName, (err) =>
+removeFile = (rootDir, imageType, imageName) =>
+  path = rootDir + imageName
+  if fs.existsSync path
+    fs.unlink path, (err) =>
       if (err != null)
         logger.debug "Cannot remove file '#{imageName}': #{err.message}"
         return
-
-      logger.debug('%s "%s" was successfully removed from collection "%s"', imageType, imageName, collectionName)
-      cFiles = fs.readdirSync(rootDir + collectionName)
-      if cFiles.length == 0
-        logger.debug '%s "%s" dir is empty. It is time to remove it', imageType, collectionName
-        fs.rmdir rootDir + collectionName, (err) =>
-          if err != null
-            logger.debug "Cannot remove dir '#{collectionName}': #{err.message}"
-            return
-          logger.debug '%s "%s" dir was successfully removed', imageType, collectionName
+      logger.debug('%s file "%s" was successfully removed from collection "%s"', imageType, imageName)
 
 
-removeImage = (collectionName, imageName) =>
-  removeFile collectionsDir, "Image", collectionName, imageName
+removeImage = (imageName) =>
+  removeFile collectionsDir, "Image", imageName
 
 
-removeThumb = (collectionName, imageName) =>
-  removeFile thumbsDir, "Thumb", collectionName, imageName
+removeThumb = (imageName) =>
+  removeFile thumbsDir, "Thumb", imageName
 
 
 exports.collectionsDir = collectionsDir

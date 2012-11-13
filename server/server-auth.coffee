@@ -5,7 +5,7 @@ users = []
 db.start (err) =>
   return if err
   db.DBUtils.getCollection('users').find().toArray (err, objects) =>
-    return if err
+    return console.log err.message if err
     users = objects
 
 findById = (id, fn) =>
