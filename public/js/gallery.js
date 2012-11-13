@@ -118,28 +118,28 @@ function createNewGallery($rgGallery, isAdmin) {
                 // Кнопки вверху справа: скрыть / показать карусель
 
                 var $viewfull = $('<a class="view-control rg-view-full"></a>'),
-                    $viewthumbs = $('<a class="view-control rg-view-thumbs rg-view-selected"></a>'),
-                    $addControl = $('<a class="collection-control rg-view-add"></a>'),
-                    $removeControl = $('<a class="collection-control rg-view-remove"></a>'),
-                    $addFileForm = $(
-                        '<form enctype="multipart/form-data" method="post">'+
-                            '<input type="file" name="upload" multiple="multiple" class="file">'+
-                            '<input type="text" name="name" class="file">'+
-                        '</form>');
-
+                    $viewthumbs = $('<a class="view-control rg-view-thumbs rg-view-selected"></a>');
 
                 $rgGallery.prepend($('<div class="rg-view"/>')
                     .append($viewfull)
                     .append($viewthumbs));
 
                 if (isAdmin) {
+                    var $addControl    = $('<a class="collection-control rg-view-add"></a>'),
+                        $removeControl = $('<a class="collection-control rg-view-remove"></a>'),
+                        $addFileForm   = $(
+                            '<form enctype="multipart/form-data" method="post">'+
+                                '<input type="file" name="upload" multiple="multiple" class="file">'+
+                                '<input type="text" name="name" class="file">'+
+                            '</form>');
+
                     $rgGallery.children().filter('div.rg-view')
                         .append($removeControl)
                         .append($addControl)
                         .append($addFileForm);
 
                     $addControl.bind('click.rgGallery', function (event) {
-                        $fileInput = $addFileForm.find('input[type=file]');
+                        var $fileInput = $addFileForm.find('input[type=file]');
                         $fileInput.val("");
                         $fileInput.change(function () {
                             $fileInput.unbind();

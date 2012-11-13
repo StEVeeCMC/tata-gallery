@@ -13,8 +13,8 @@ $(function($){
             var collection = structure[collectionName]
             for (var i=0; i<collection.length; i++){
                 imagesCollection.push({
-                    dataThumb       : 'img/thumbs/'+collectionName+'/'+collection[i],
-                    dataLarge       : 'img/collections/'+collectionName+'/'+collection[i],
+                    dataLarge       : 'img/all/'+collection[i],
+                    dataThumb       : 'img/all/thumbs/'+collection[i],
                     collectionName  : collectionName,
                     fileName        : collection[i]
                 })
