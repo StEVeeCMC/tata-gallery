@@ -157,6 +157,7 @@ hr {
 }
 
 .input-label {
+    width: 100%;
     position: relative;
     margin-top: 3px;
 }

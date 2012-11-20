@@ -123,6 +123,9 @@ defaultCollectionName = () => "collection-" + dateSuffix()
 
 getFileURLHash = (fileName) => crypto.createHash('md5').update(fileName + dateSuffix()).digest("hex")
 
+#TODO: Win/Linix hack => Use regular expressions
+getFileNameByPath = (path) => path.split('/').map((w) => w.split("\\")).pop().pop()
+
 getAllCollections = () => db.ImgCollection.collections
 
 
@@ -146,7 +149,8 @@ app.post '/upload', (request, response, next) =>
   filesNumber = files.length
   files.forEach (uploadedFile) =>
     return logger.debug "WARNING: uploaded file has no name" unless uploadedFile.name && uploadedFile.name.length
-    fileURL = getFileURLHash uploadedFile.name
+#    fileURL = getFileURLHash uploadedFile.name
+    fileURL = getFileNameByPath uploadedFile.path
     imgProcessing.saveFile uploadedFile, fileURL, (err) =>
       unless err
         image = new db.Image uploadedFile.name, fileURL, fileURL
@@ -154,45 +158,76 @@ app.post '/upload', (request, response, next) =>
       if !(--filesNumber)
         collection.save () => response.end()
 
-app.get '/remove/:collectionName/:fileName', (request, response) =>
+
+getCollectionByName = (name) ->
+  if name && name.length
+    collection = _.find getAllCollections(), (collection) => collection.name == name
+  else
+    new Error "Cannot find collection by empty name"
+
+getCollectionImageByURL = (collection, imageURL) ->
+  if imageURL and imageURL.length
+    if collection
+      image = _.find collection.images, (image) => image.imageURL == imageURL
+    else
+      new Error "Cannot find image in empty collection"
+  else
+    new Error "Cannot find image by emtpy url"
+
+
+app.get '/remove/:collectionName/:imageURL', (request, response) =>
   if !request.user
     logger.debug "WARNING! There are no rights to remove an image!"
     return
 
   collectionName = request.params.collectionName
-  imageURL = request.params.fileName
-  if (collectionName + '').length == 0 || (imageURL + '').length == 0
-    logger.error 'Collection name or file name is empty'
-    return
-
+  imageURL = request.params.imageURL
   logger.debug 'Get request to remove image "%s" from collection "%s"', imageURL, collectionName
 
-  collection = _.find getAllCollections(), (collection) => collection.name == collectionName
-  return response.end() unless collection
-  logger.debug "Collection '#{collectionName}' was found"
-
-  image = _.find collection.images, (image) => image.imageURL == imageURL
-  return response.end() unless image
-  logger.debug "Image '#{imageURL}' was found"
+  try
+    collection = getCollectionByName collectionName
+    image = getCollectionImageByURL collection, imageURL
+    return "Collection or image were not found" unless collection and image
+    logger.debug "Collection and image were successfully found"
+  catch err
+    logger.debug err.message
+    return response.end()
 
   collection.removeImage image, (err) =>
     return response.end() if err
     logger.debug "Image '#{image.imageURL}' (#{image.name}) was successfully removed"
     imgProcessing.removeImage image.imageURL
     imgProcessing.removeThumb image.thumbURL
+    response.end()
 
 app.get '/struct', (request, response) =>
   logger.debug 'Get collections list request'
-  result = {}
   for collection in getAllCollections()
-    result[collection.name] = []
     logger.debug "+ #{collection.name} (#{collection.images.length})"
     for image in collection.images
       logger.debug "|  #{image.imageURL}"
-      result[collection.name].push image.imageURL
+  result = []
+  for collection in getAllCollections()
+    result.push(_.extend collection.toJSON(), images : collection.images.map (image) -> image.toJSON())
   response.send result
 
+app.post '/collectionDescription', (request, response) =>
+  logger.debug "Get request to change collection description"
+  newCollectionDescription = request.body.description
+  collectionName = request.body.collectionName
+  try
+    collection = getCollectionByName collectionName
+    return response.end() unless collection
+    logger.debug "Collection was successfully found"
+  catch err
+    logger.debug "There was error during collection search: #{err.message}"
+    return response.end()
+  collection.description = newCollectionDescription
+  collection.save()
+  response.end()
 
+
+#  TODO: Prepare log, upload and other dependent dirs
 db.start (err) =>
   return logger.debug "Error: #{err.message}" if err
   db.ImgCollection.getImgCollections (err) =>

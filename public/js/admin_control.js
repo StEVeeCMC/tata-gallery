@@ -47,6 +47,7 @@ $(function($){
         $fileInput.click();
     });
 
+/*
     $('.rg-gallery').each(function(){
         var $addControl    = $('<a class="collection-control rg-view-add"></a>'),
             $removeControl = $('<a class="collection-control rg-view-remove"></a>'),
@@ -57,7 +58,6 @@ $(function($){
                     '</form>');
 
         function collectionName(){
-
         };
 
         $(this).children().filter('div.rg-view')
@@ -83,12 +83,14 @@ $(function($){
                             }
                             return myXhr;
                         },
-                        /*
+                        */
+/*
                          //Ajax events
                          beforeSend: beforeSendHandler,
                          success: completeHandler,
                          error: errorHandler,
-                         */
+                         *//*
+
                         // Form data
                         data:formData,
                         //Options to tell JQuery not to process data or worry about content-type
@@ -101,4 +103,5 @@ $(function($){
             $fileInput.click();
         })
     })
+*/
 });

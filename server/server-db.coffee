@@ -1,16 +1,23 @@
 _       = require 'underscore'
 mongodb = require 'mongodb'
 
+host = '127.0.0.1'
+port = 27017
+dbName = 'production'
+
+setHost = (value) -> host = value
+setPort = (value) -> port = value
+setDBName = (value) -> dbName = value
 
 # TODO: Remove start from exports =>
 # Run start in check client with passing cb to getCollection =>
-# DO refactoring of depending logic
+# Do refactoring of depending logic
 start = (cb) =>
   if DBUtils.client
     cb null if cb
     return
-  server = new mongodb.Server "127.0.0.1", 27017, {}
-  new mongodb.Db('test', server, {}).open (err, client) =>
+  server = new mongodb.Server host, port, {}
+  new mongodb.Db(dbName, server, {safe: true}).open (err, client) =>
     console.log "Setting up db client"
     if err
       cb err if cb
@@ -87,6 +94,7 @@ class ImgCollection
     @dbCollection = null
     @images       = []
     @loaded       = false
+    @date         = Date.now()
 
   isEmpty: () -> @images.length == 0
 
@@ -99,6 +107,7 @@ class ImgCollection
   toJSON: ->
     name        : @name
     description : @description
+    date        : @date
 
   isPersisted: -> @_id?
 
@@ -256,6 +265,10 @@ class Image
   clone: (image) ->
     _.extend @, image
 
+
+exports.setHost = setHost
+exports.setPort = setPort
+exports.setDBName = setDBName
 
 exports.start         = start
 exports.ImgCollection = ImgCollection

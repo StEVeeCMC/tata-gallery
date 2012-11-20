@@ -19,7 +19,7 @@
     margin-right: auto;
     height: 100%;
     width: 100%;
-    max-height: 800px;
+    /*max-height: 800px;*/
     max-width: 600px;
 }
 
@@ -100,6 +100,10 @@
     background-position: 0px 0px;
 }
 
+.rg-view a.rg-view-change-description {
+    background-position: 0px 0px;
+}
+
 input.file {
     position: absolute;
     left:0px;
@@ -170,4 +174,8 @@ input.file {
     padding-top: 20px;
     position: relative;
     text-align: left;
+}
+
+.ui-widget-content {
+    background: #1F1F1F url(../img/black.png) repeat top left;
 }

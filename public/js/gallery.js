@@ -1,4 +1,4 @@
-function createNewGallery($rgGallery, isAdmin) {
+function createNewGallery($rgGallery, collection, isAdmin) {
     // ======================= Плагин imagesLoaded ===============================
     // https://github.com/desandro/imagesloaded
 
@@ -43,6 +43,8 @@ function createNewGallery($rgGallery, isAdmin) {
         return this;
     };
 
+    var eventReadyName = "firstImageIsReady";
+    var firstImageIsReady = false;
     // Контейнер галереи
     // Контейнер карусели
     var $esCarousel = $rgGallery.find('div.es-carousel-wrapper'),
@@ -131,12 +133,40 @@ function createNewGallery($rgGallery, isAdmin) {
                             '<form enctype="multipart/form-data" method="post">'+
                                 '<input type="file" name="upload" multiple="multiple" class="file">'+
                                 '<input type="text" name="name" class="file">'+
-                            '</form>');
+                            '</form>'),
+                        $descriptionControl = $('<a class="collection-control rg-view-change-description"></a>');
 
                     $rgGallery.children().filter('div.rg-view')
                         .append($removeControl)
                         .append($addControl)
-                        .append($addFileForm);
+                        .append($addFileForm)
+                        .append($descriptionControl);
+
+                    $descriptionControl.bind('click.rgGallery', function (event) {
+                        var $dialogBox = $( "#descriptionDialog" ).tmpl();
+                        $descriptionInput = $dialogBox.children().filter('#descriptionInput');
+                        $descriptionInput.val(collection.description);
+                        $dialogBox.dialog({
+                            buttons:{
+                                Ok:function () {
+                                    _this = this;
+                                    $.post(
+                                        '/collectionDescription',
+                                        {
+                                            collectionName  : collectionName(),
+                                            description     : $descriptionInput.val()
+                                        },
+                                        function () {
+                                            $rgGallery.children().filter("#collectionDescription").html($descriptionInput.val());
+                                            $(_this).dialog("close");
+                                        });
+                                },
+                                Cancel:function () {
+                                    $(this).dialog("close");
+                                }
+                            }
+                        });
+                    });
 
                     $addControl.bind('click.rgGallery', function (event) {
                         var $fileInput = $addFileForm.find('input[type=file]');
@@ -145,34 +175,11 @@ function createNewGallery($rgGallery, isAdmin) {
                             $fileInput.unbind();
                             if ($fileInput.val() != "") {
                                 $addFileForm.find('input[name=name]').val(collectionName());
-                                var formData = new FormData($addFileForm[0]);
-                                $.ajax({
-                                    url:'/upload', //server script to process data
-                                    type:'POST',
-                                    xhr:function () {  // custom xhr
-                                        var myXhr = $.ajaxSettings.xhr();
-                                        if (myXhr.upload) { // check if upload property exists
-//                                        myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // for handling the progress of the upload
-                                        }
-                                        return myXhr;
-                                    },
-                                    /*
-                                     //Ajax events
-                                     beforeSend: beforeSendHandler,
-                                     success: completeHandler,
-                                     error: errorHandler,
-                                     */
-                                    // Form data
-                                    data:formData,
-                                    //Options to tell JQuery not to process data or worry about content-type
-                                    cache:false,
-                                    contentType:false,
-                                    processData:false
-                                });
+                                uploadForm($addFileForm);
                             }
                         });
                         $fileInput.click();
-                    })
+                    });
 
                     $removeControl.bind('click.rgGallery', function (event) {
                         var isItLast = itemsCount() == 1;
@@ -326,6 +333,11 @@ function createNewGallery($rgGallery, isAdmin) {
                     }
 
                     anim = false;
+
+                    if (!firstImageIsReady) {
+                        $rgGallery.trigger(eventReadyName);
+                        firstImageIsReady = true;
+                    }
 
                 }).attr('src', largesrc);
 

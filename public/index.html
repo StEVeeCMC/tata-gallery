@@ -35,7 +35,10 @@
         </div>
     </script>
     <script id="rg-gallery-tmpl" type="text/x-jquery-tmpl">
-        <div class="rg-gallery">
+        <div class="rg-gallery" style="position: relative;">
+            <div id="collectionDescription" style="position: absolute; top: 0; left: 0; height: 16px; font-size: 16px;">
+                ${description}
+            </div>
             <div class="rg-thumbs">
                 <!-- Elastislide Carousel Thumbnail Viewer -->
                 <div class="es-carousel-wrapper">
@@ -65,6 +68,23 @@
             <!-- rg-thumbs -->
         </div>
     </script>
+    <script id="descriptionDialog" type="text/x-jquery-tmpl">
+        <div id="dialog" title="Описание коллекции" style="width:100%">
+            <input id="descriptionInput" style="width:95%">
+        </div>
+    </script>
+    <script id="loginDialog" type="text/x-jquery-tmpl">
+        <div class="dialog loginForm" title="Авторизация">
+            <div class="input-label">
+                <input type="text" id="username" name="username"/>
+                <label>Имя пользователя</label>
+            </div>
+            <div class="input-label">
+                <input type="password" id="password" name="password"/>
+                <label>Пароль</label>
+            </div>
+        </div>
+    </script>
 </head>
 <body>
 <div class="container">
@@ -77,7 +97,7 @@
 
 <div class="footer">
     <hr/>
-    <a id="login" class="login-control" href="/login.html"></a>
+    <a id="login" class="login-control"></a>
     <a id="logout" class="logout-control" href="/logout" style="display: none;"></a>
     <a id="new-collection-add" class="admin-control collection-add"></a>
     <p>Галерея Наталии Терновых</p>
@@ -87,8 +107,13 @@
 <script type="text/javascript" src="js/jquery.tmpl.min.js"></script>
 <script type="text/javascript" src="js/jquery.easing.1.3.js"></script>
 <script type="text/javascript" src="js/jquery.elastislide.js"></script>
+
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" />
+<script type="text/javascript" src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+
 <script type="text/javascript" src="js/admin_control.js"></script>
 <script type="text/javascript" src="js/galleryFactory.js"></script>
 <script type="text/javascript" src="js/gallery.js"></script>
+<script type="text/javascript" src="js/login.js"></script>
 </body>
 </html>

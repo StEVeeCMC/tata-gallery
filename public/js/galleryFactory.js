@@ -7,21 +7,29 @@ $(function($){
         $('#login').hide();
         $('#logout').show();
     });
-    $.get('/struct', function(structure){
-        for (var collectionName in structure){
+    $.get('/struct', function(collections) {
+        appendNextCollection(collections);
+        function appendNextCollection(collections) {
+            if (collections.length == 0) return;
+            var collection = collections.pop();
             var imagesCollection = [];
-            var collection = structure[collectionName]
-            for (var i=0; i<collection.length; i++){
+            collection.images.forEach(function(image) {
                 imagesCollection.push({
-                    dataLarge       : 'img/all/'+collection[i],
-                    dataThumb       : 'img/all/thumbs/'+collection[i],
-                    collectionName  : collectionName,
-                    fileName        : collection[i]
+                    dataLarge       : 'img/all/' + image.imageURL,
+                    dataThumb       : 'img/all/thumbs/' + image.thumbURL,
+                    collectionName  : collection.name,
+                    fileName        : image.imageURL
                 })
-            }
+            });
             var $content = $('div.content');
-            var $rgGallery = $('#rg-gallery-tmpl').tmpl({imagesCollection:imagesCollection}).appendTo($content);
-            createNewGallery($rgGallery, isAdmin);
+            var $rgGallery = $('#rg-gallery-tmpl').tmpl({
+                description: collection.description,
+                imagesCollection:imagesCollection
+            }).appendTo($content);
+            $rgGallery.bind("firstImageIsReady", function(){
+                appendNextCollection(collections);
+            });
+            createNewGallery($rgGallery, collection, isAdmin);
         }
     });
 });
