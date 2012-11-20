@@ -1,3 +1,5 @@
+public/img/all/
+server/tmp/
 node_modules
 .idea
 *.log
