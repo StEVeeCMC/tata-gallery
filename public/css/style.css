@@ -100,8 +100,29 @@
     background-position: 0px 0px;
 }
 
+.rg-view a.rg-view-remove {
+    background-position: 0px -16px;
+}
+
 .rg-view a.rg-view-change-description {
-    background-position: 0px 0px;
+    background-position: 0px -48px;
+}
+
+.rg-view a.rg-view-up {
+    background-position: 0px -32px;
+    -webkit-transform: rotateZ(180deg);
+    -moz-transform: rotateZ(180deg);
+}
+
+.rg-view a.rg-view-down {
+    background-position: 0px -32px;
+}
+
+select {
+    display: block;
+    float: right;
+    margin-right: 3px;
+    opacity: 0.8;
 }
 
 input.file {
@@ -111,10 +132,6 @@ input.file {
     width: 1px;
     opacity: 0;
     visibility: hidden;
-}
-
-.rg-view a.rg-view-remove {
-    background-position: 0px -16px;
 }
 
 .rg-view a.rg-view-full {

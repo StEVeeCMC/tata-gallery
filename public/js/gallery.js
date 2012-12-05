@@ -50,13 +50,8 @@ function createNewGallery($rgGallery, collection, isAdmin) {
     var $esCarousel = $rgGallery.find('div.es-carousel-wrapper'),
         refreshNeeded = false,
     // Пункт карусели
-        _$items = null,
         $items = function () {
-            if (_$items == null || refreshNeeded) {
-                _$items = $esCarousel.find('ul > li');
-                refreshNeeded = false;
-            }
-            return _$items;
+            return $esCarousel.find('ul > li');
         },
     // Общее количество пунктов
         itemsCount = function() {
@@ -134,30 +129,61 @@ function createNewGallery($rgGallery, collection, isAdmin) {
                                 '<input type="file" name="upload" multiple="multiple" class="file">'+
                                 '<input type="text" name="name" class="file">'+
                             '</form>'),
-                        $descriptionControl = $('<a class="collection-control rg-view-change-description"></a>');
+                        $descriptionControl = $('<a class="collection-control rg-view-change-description"></a>'),
+                        $upControl = $('<a class="collection-control rg-view-up"></a>'),
+                        $downControl = $('<a class="collection-control rg-view-down"></a>'),
+                        $selectControl = $(
+                            '<select>' +
+                                '<option value="inters">Интерьеры</option>' +
+                                '<option value="logos">Лого</option>' +
+                                '<option value="draws">Рисую</option>' +
+                            '</select>');
+
+                    $selectControl.val(collection.type);
 
                     $rgGallery.children().filter('div.rg-view')
                         .append($removeControl)
                         .append($addControl)
                         .append($addFileForm)
-                        .append($descriptionControl);
+                        .append($descriptionControl)
+                        .append($downControl)
+                        .append($upControl)
+                        .append($selectControl);
+
+                    $selectControl.change(function(event) {
+                        changeType(collectionName(), $selectControl.val());
+                    });
+
+                    $upControl.bind('click.rgGallery', function (event) {
+                        upImage(collectionName(), fileName());
+                        if (current > 0) {
+                            $items().eq(current).after($items().eq(current-1));
+                            current--;
+                        }
+                    });
+
+                    $downControl.bind('click.rgGallery', function (event) {
+                        downImage(collectionName(), fileName());
+                        if (current < $items().size()) {
+                            $items().eq(current).before($items().eq(current+1));
+                            current++;
+                        }
+
+                    });
 
                     $descriptionControl.bind('click.rgGallery', function (event) {
+                        $collectionDescription = $rgGallery.children().filter("#collectionDescription");
                         var $dialogBox = $( "#descriptionDialog" ).tmpl();
                         $descriptionInput = $dialogBox.children().filter('#descriptionInput');
                         $descriptionInput.val(collection.description);
                         $dialogBox.dialog({
                             buttons:{
                                 Ok:function () {
-                                    _this = this;
-                                    $.post(
-                                        '/collectionDescription',
-                                        {
-                                            collectionName  : collectionName(),
-                                            description     : $descriptionInput.val()
-                                        },
+                                    var _this = this;
+                                    changeDescription(collectionName(), $descriptionInput.val(),
                                         function () {
-                                            $rgGallery.children().filter("#collectionDescription").html($descriptionInput.val());
+                                            collection.description = $descriptionInput.val();
+                                            $collectionDescription.html($descriptionInput.val());
                                             $(_this).dialog("close");
                                         });
                                 },
@@ -185,7 +211,6 @@ function createNewGallery($rgGallery, collection, isAdmin) {
                         var isItLast = itemsCount() == 1;
                         // Remove item
                         $.get('/remove/' + collectionName() + '/' + fileName());
-                        refreshNeeded = true;
                         $items().eq(current).remove();
                         if (isItLast) {
                             // There are no images so remove entire collection
@@ -247,14 +272,6 @@ function createNewGallery($rgGallery, collection, isAdmin) {
                         },
                         preventDefaultEvents:false
                     });
-
-                    $(document).bind('keyup.rgGallery', function (event) {
-                        if (event.keyCode == 39)
-                            _navigate('right');
-                        else if (event.keyCode == 37)
-                            _navigate('left');
-                    });
-
                 }
 
             },

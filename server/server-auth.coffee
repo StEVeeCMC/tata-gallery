@@ -1,11 +1,14 @@
-_  = require 'underscore'
-db = require './server-db'
+_   = require 'underscore'
+db  = require './server-db'
+log = require './server-logger.coffee'
 
-users = []
+logger = log.logger
+users   = []
+
 db.start (err) =>
   return if err
   db.DBUtils.getCollection('users').find().toArray (err, objects) =>
-    return console.log err.message if err
+    return logger.debug err.message if err
     users = objects
 
 findById = (id, fn) =>

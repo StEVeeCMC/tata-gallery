@@ -1,29 +1,13 @@
 gm              = require 'gm'
 fs              = require 'fs'
-log4js          = require 'log4js'
-
-log4js.configure
-  appenders: [
-    {
-      type: 'console'
-      category: 'logFile'
-    }
-    {
-      type: 'file'
-      filename: './logs/server-tata.log4js.log'
-      category: 'logFile'
-      maxLogSize: 10*1024*1024*1024
-      backups: 5
-    }
-  ]
-
-logger = log4js.getLogger 'logFile'
-logger.setLevel 'DEBUG'
+log             = require './server-logger.coffee'
 
 collectionsDir  = __dirname + '/../public/img/all/'
 thumbsDir       = __dirname + '/../public/img/all/thumbs/'
 thumbSide       = 100
 thumbQuality    = 100
+maxWidth        = 800
+logger          = log.logger
 
 setCollectinsDir = (value) => collectionsDir = value
 setThumbsDir = (value) => thumbsDir = value
@@ -44,7 +28,7 @@ makeThumbnail = (file, thumbPath, thumbSide, cb) =>
     height = value.height
     sideMin = Math.min width, height
 
-    gm(file.path).thumb thumbSide, thumbSide, thumbPath, thumbQuality, (err) =>
+    gm(file.path).thumb thumbSide, thumbSide, thumbPath, thumbQuality, 'center', (err) =>
       #       .crop(sideMin, sideMin, (width - sideMin) / 2, (height - sideMin) / 2)
       if err
         logger.debug err.message
@@ -67,8 +51,8 @@ saveFile = (file, fileName, cb) =>
         fs.mkdirSync(thumbsDir) if !fs.existsSync(thumbsDir)
 
         logger.debug 'Creating full view image "%s"', file.name
-        fs.writeFile fullPath, data, (err) =>
-          if err != null
+        gm(file.path).resize(maxWidth).write fullPath, (err) ->
+          if err
             logger.debug err.message
             cb err if cb
             return

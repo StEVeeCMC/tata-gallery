@@ -1,3 +1,23 @@
+function upImage(collectionName, imageURL, successCB) {
+    $.post('/up', {collectionName:collectionName, imageURL:imageURL}, successCB);
+}
+
+function downImage(collectionName, imageURL, successCB) {
+    $.post('/down', {collectionName:collectionName, imageURL:imageURL}, successCB);
+}
+
+function changeDescription(collectionName, description, successCB) {
+    $.post('/collectionDescription', {collectionName:collectionName, description:description}, successCB);
+}
+
+function changeType(collectionName, type, successCB) {
+    $.post('/collectionType', {collectionName:collectionName, type:type}, successCB);
+}
+
+function getType() {
+    return window.location.href.split('=')[1];
+}
+
 function uploadForm($fileForm) {
     var formData = new FormData($fileForm[0]);
     $.ajax({
@@ -31,13 +51,16 @@ $(function($){
         '<form enctype="multipart/form-data" method="post">'+
             '<input type="file" name="upload" multiple="multiple" class="file">'+
             '<input type="text" name="name" class="file">'+
+            '<input type="text" name="type" class="file">'+
         '</form>');
     $('.footer').append($addFileForm);
     $('#new-collection-add').click(function(){
         var $fileInput = $addFileForm.find('input[type=file]');
         var $cNameInput = $addFileForm.find('input[name=name]');
+        var $typeInput = $addFileForm.find('input[name=type]');
         $fileInput.val("");
         $cNameInput.val("");
+        $typeInput.val(getType());
         $fileInput.change(function () {
             $fileInput.unbind();
             if ($fileInput.val() != "") {

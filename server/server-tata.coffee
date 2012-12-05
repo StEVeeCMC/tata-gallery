@@ -11,30 +11,13 @@ crypto          = require 'crypto'
 db              = require './server-db.coffee'
 auth            = require './server-auth'
 imgProcessing   = require './server-img-process'
+log             = require './server-logger.coffee'
 
 app             = express()
 server          = http.createServer app
 port            = 8888
-
 uploadDir       = __dirname + '/tmp/'
-
-log4js.configure
-  appenders: [
-    {
-      type: 'console'
-      category: 'logFile'
-    }
-    {
-      type: 'file'
-      filename: './logs/server-tata.log4js.log'
-      category: 'logFile'
-      maxLogSize: 10*1024*1024*1024
-      backups: 5
-    }
-  ]
-
-logger = log4js.getLogger 'logFile'
-logger.setLevel 'DEBUG'
+logger          = log.logger
 
 passport.serializeUser (user, done) => done null, user._id
 
@@ -136,8 +119,9 @@ app.post '/upload', (request, response, next) =>
     return
 
   collectionName = request.param 'name'
+  collectionType = request.param 'type'
   unless collectionName && collectionName.length
-    collection = new db.ImgCollection defaultCollectionName()
+    collection = new db.ImgCollection defaultCollectionName(), collectionType
   else
     collection = _.find getAllCollections(), (c) => c.name == collectionName
     return response.end() unless collection
@@ -200,6 +184,7 @@ app.get '/remove/:collectionName/:imageURL', (request, response) =>
     imgProcessing.removeThumb image.thumbURL
     response.end()
 
+
 app.get '/struct', (request, response) =>
   logger.debug 'Get collections list request'
   for collection in getAllCollections()
@@ -208,17 +193,18 @@ app.get '/struct', (request, response) =>
       logger.debug "|  #{image.imageURL}"
   result = []
   for collection in getAllCollections()
-    result.push(_.extend collection.toJSON(), images : collection.images.map (image) -> image.toJSON())
+    result.push collection.toJSON()
   response.send result
 
+
 app.post '/collectionDescription', (request, response) =>
-  logger.debug "Get request to change collection description"
   newCollectionDescription = request.body.description
   collectionName = request.body.collectionName
+  logger.debug "Get request to change collection '#{collectionName}' description to '#{newCollectionDescription}'"
   try
     collection = getCollectionByName collectionName
     return response.end() unless collection
-    logger.debug "Collection was successfully found"
+    logger.debug "Collection '#{collectionName}' was successfully found"
   catch err
     logger.debug "There was error during collection search: #{err.message}"
     return response.end()
@@ -227,7 +213,74 @@ app.post '/collectionDescription', (request, response) =>
   response.end()
 
 
+app.post '/collectionType', (request, response) =>
+  collectionName = request.body.collectionName
+  newCollectionType = request.body.type
+  logger.debug "Get request to change collection '#{collectionName}' type to '#{newCollectionType}'"
+  try
+    collection = getCollectionByName collectionName
+    return response.end() unless collection
+    logger.debug "Collection '#{collectionName}' was successfully found"
+  catch err
+    logger.debug "There was error during collection search: #{err.message}"
+    return response.end()
+  collection.type = newCollectionType
+  collection.save()
+  response.end()
+
+
+app.post '/up', (request, response) ->
+  if !request.user
+    logger.debug "WARNING! There are no rights to remove an image!"
+    return
+
+  collectionName = request.body.collectionName
+  imageURL = request.body.imageURL
+  logger.debug 'Get request to up image "%s" in collection "%s"', imageURL, collectionName
+
+  try
+    collection = getCollectionByName collectionName
+    images = collection.images
+    image = _.find images, (image) -> imageURL == image.imageURL
+    index = images.indexOf image
+    prevIndex = if index == 0 then index else index - 1
+    images[index] = images[prevIndex]
+    images[prevIndex] = image
+  catch err
+    logger.debug "There was error during image up: #{err.message}"
+    return response.end()
+
+  collection.save()
+  response.end()
+
+
+app.post '/down', (request, response) ->
+  if !request.user
+    logger.debug "WARNING! There are no rights to remove an image!"
+    return
+
+  collectionName = request.body.collectionName
+  imageURL = request.body.imageURL
+  logger.debug 'Get request to down image "%s" in collection "%s"', imageURL, collectionName
+
+  try
+    collection = getCollectionByName collectionName
+    images = collection.images
+    image = _.find images, (image) -> imageURL == image.imageURL
+    index = images.indexOf image
+    nextIndex = if index == images.length - 1 then index else index + 1
+    images[index] = images[nextIndex]
+    images[nextIndex] = image
+  catch err
+    logger.debug "There was error during image down: #{err.message}"
+    return response.end()
+
+  collection.save()
+  response.end()
+
+
 #  TODO: Prepare log, upload and other dependent dirs
+db.setLogger logger
 db.start (err) =>
   return logger.debug "Error: #{err.message}" if err
   db.ImgCollection.getImgCollections (err) =>
