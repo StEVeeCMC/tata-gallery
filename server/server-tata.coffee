@@ -14,7 +14,7 @@ log             = require './server-logger.coffee'
 
 app             = express()
 server          = http.createServer app
-port            = 8888
+port            = 8080
 uploadDir       = __dirname + '/tmp/'
 logger          = log.logger
 
