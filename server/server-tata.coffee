@@ -6,7 +6,6 @@ passport        = require 'passport'
 LocalStrategy   = require('passport-local').Strategy
 flash           = require 'connect-flash'
 log4js          = require 'log4js'
-crypto          = require 'crypto'
 
 db              = require './server-db.coffee'
 auth            = require './server-auth'
@@ -104,8 +103,6 @@ dateSuffix = () =>
 
 defaultCollectionName = () => "collection-" + dateSuffix()
 
-getFileURLHash = (fileName) => crypto.createHash('md5').update(fileName + dateSuffix()).digest("hex")
-
 #TODO: Win/Linix hack => Use regular expressions
 getFileNameByPath = (path) => path.split('/').map((w) => w.split("\\")).pop().pop()
 
@@ -133,7 +130,6 @@ app.post '/upload', (request, response, next) =>
   filesNumber = files.length
   files.forEach (uploadedFile) =>
     return logger.debug "WARNING: uploaded file has no name" unless uploadedFile.name && uploadedFile.name.length
-#    fileURL = getFileURLHash uploadedFile.name
     fileURL = getFileNameByPath uploadedFile.path
     imgProcessing.saveFile uploadedFile, fileURL, (err) =>
       unless err
