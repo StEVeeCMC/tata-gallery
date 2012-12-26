@@ -74,10 +74,10 @@ app.get '/login', (req, res) =>
 # curl -v -d "username=[username]&password=[password]" http://[ip]:[port]/login
 app.post '/login', (req, res, next) =>
   passport.authenticate( 'local', (err, user, info) =>
-    return next(err) if err?
-    return res.send(401) unless user?
+    return next(err) if err
+    return res.send(401) unless user
     req.logIn user, (err) =>
-      return next(err) if err?
+      return next(err) if err
       return res.redirect('/')
   )(req, res, next)
 
