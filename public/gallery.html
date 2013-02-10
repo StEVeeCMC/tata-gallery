@@ -73,15 +73,13 @@
             <input id="descriptionInput" style="width:95%">
         </div>
     </script>
-    <script id="loginDialog" type="text/x-jquery-tmpl">
-        <div class="dialog loginForm" title="Авторизация">
-            <div class="input-label">
-                <input type="text" id="username" name="username"/>
-                <label>Имя пользователя</label>
+    <script id="login-dialog" type="text/x-jquery-tmpl">
+        <div class="dialog login-form" title="Авторизация">
+            <div class="input-box">
+                <input type="text" id="username" name="username" placeholder="Имя пользователя"/>
             </div>
-            <div class="input-label">
-                <input type="password" id="password" name="password"/>
-                <label>Пароль</label>
+            <div class="input-box">
+                <input type="password" id="password" name="password" placeholder="Пароль"/>
             </div>
         </div>
     </script>
@@ -111,8 +109,7 @@
 <script type="text/javascript" src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
 
 <script type="text/javascript" src="js/admin_control.js"></script>
-<script type="text/javascript" src="js/galleryFactory.js"></script>
 <script type="text/javascript" src="js/gallery.js"></script>
-<script type="text/javascript" src="js/login.js"></script>
+<script type="text/javascript" src="js/galleryFactory.js"></script>
 </body>
 </html>
