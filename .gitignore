@@ -1,5 +1,6 @@
 public/img/all/
 server/tmp/
+server/image-hosting
 node_modules
 .idea
 *.log
