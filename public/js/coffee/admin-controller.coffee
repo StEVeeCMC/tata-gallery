@@ -44,7 +44,7 @@ define [
       $.ajax
         type: 'POST'
         url:  '/upload'
-        xhr:  () ->
+        xhr:  () =>
           # custom xhr
           myXhr = $.ajaxSettings.xhr()
           #        if myXhr.upload #check if upload property exists
@@ -77,13 +77,13 @@ define [
                           '<input type="text" name="type" class="file">'+
                         '</form>'
       $('.footer').append $addFileForm
-      $('#new-collection-add').click () ->
+      $('#new-collection-add').click () =>
         $fileInput = $addFileForm.find('input[type=file]').val ""
         $cNameInput = $addFileForm.find('input[name=name]').val ""
-        $typeInput = $addFileForm.find('input[name=type]').val getCollectionType()
-        $fileInput.change () ->
+        $typeInput = $addFileForm.find('input[name=type]').val @getCollectionType()
+        $fileInput.change () =>
           $fileInput.unbind()
-          uploadForm $addFileForm unless $fileInput.val() is ""
+          @uploadForm $addFileForm unless $fileInput.val() is ""
         $fileInput.click()
       @
 
@@ -101,13 +101,13 @@ define [
                 url: '/login'
                 type: 'POST'
                 data: formData
-                error: () -> $loginDialogBox.dialog("widget").effect "shake", times : 3, 333
-                success: () -> window.location.replace '/'
+                error: () => $loginDialogBox.dialog("widget").effect "shake", times : 3, 333
+                success: () => window.location.replace '/'
                 #Options to tell JQuery not to process data or worry about content-type
                 cache: false
                 contentType: false
                 processData: false
-            "Cancel" : () ->
+            "Cancel" : () =>
               $loginDialogBox.dialog "close"
       $('#logout').click => $.get '/logout'
       @

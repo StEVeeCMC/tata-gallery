@@ -65,7 +65,8 @@
       };
 
       AdminController.prototype.uploadForm = function($fileForm) {
-        var formData;
+        var formData,
+          _this = this;
         formData = new FormData($fileForm[0]);
         $.ajax({
           type: 'POST',
@@ -101,18 +102,19 @@
       };
 
       AdminController.prototype.createUploadForm = function() {
-        var $addFileForm;
+        var $addFileForm,
+          _this = this;
         $addFileForm = $('<form enctype="multipart/form-data" method="post">' + '<input type="file" name="upload" multiple="multiple" class="file">' + '<input type="text" name="name" class="file">' + '<input type="text" name="type" class="file">' + '</form>');
         $('.footer').append($addFileForm);
         $('#new-collection-add').click(function() {
           var $cNameInput, $fileInput, $typeInput;
           $fileInput = $addFileForm.find('input[type=file]').val("");
           $cNameInput = $addFileForm.find('input[name=name]').val("");
-          $typeInput = $addFileForm.find('input[name=type]').val(getCollectionType());
+          $typeInput = $addFileForm.find('input[name=type]').val(_this.getCollectionType());
           $fileInput.change(function() {
             $fileInput.unbind();
             if ($fileInput.val() !== "") {
-              return uploadForm($addFileForm);
+              return _this.uploadForm($addFileForm);
             }
           });
           return $fileInput.click();
