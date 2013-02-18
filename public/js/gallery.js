@@ -54,7 +54,6 @@ define([
         // Контейнер галереи
         // Контейнер карусели
         var $esCarousel = $rgGallery.find('div.es-carousel-wrapper'),
-            refreshNeeded = false,
         // Пункт карусели
             $items = function () {
                 return $esCarousel.find('ul > li');
@@ -85,10 +84,8 @@ define([
                     $items().add('<img src="img/ajax-loader.gif"/><img src="img/black.png"/>').imagesLoaded(function () {
                         // Добавляем опции
                         _addViewModes();
-
                         // Добавляем обертку большого изображения
                         _addImageWrapper();
-
                         // Выводим первое изображение
                         _showImage($items().eq(current));
                     });
@@ -119,13 +116,30 @@ define([
                 _addViewModes = function () {
 
                     // Кнопки вверху справа: скрыть / показать карусель
-
                     var $viewfull = $('<a class="view-control rg-view-full"></a>'),
                         $viewthumbs = $('<a class="view-control rg-view-thumbs rg-view-selected"></a>');
 
                     $rgGallery.prepend($('<div class="rg-view"/>')
                         .append($viewfull)
                         .append($viewthumbs));
+
+                    $viewfull.bind('click.rgGallery', function (event) {
+                        $esCarousel.elastislide('destroy').hide();
+                        $viewfull.addClass('rg-view-selected');
+                        $viewthumbs.removeClass('rg-view-selected');
+                        mode = 'fullview';
+                        return false;
+                    });
+
+                    $viewthumbs.bind('click.rgGallery', function (event) {
+                        _initCarousel();
+                        $viewthumbs.addClass('rg-view-selected');
+                        $viewfull.removeClass('rg-view-selected');
+                        mode = 'carousel';
+                        return false;
+                    });
+
+                    if (itemsCount() <= 1) $viewfull.click();
 
                     if (adminController.isAdmin) {
                         var $addControl    = $('<a class="collection-control rg-view-add"></a>'),
@@ -229,21 +243,6 @@ define([
                     }
 
 
-                    $viewfull.bind('click.rgGallery', function (event) {
-                        $esCarousel.elastislide('destroy').hide();
-                        $viewfull.addClass('rg-view-selected');
-                        $viewthumbs.removeClass('rg-view-selected');
-                        mode = 'fullview';
-                        return false;
-                    });
-
-                    $viewthumbs.bind('click.rgGallery', function (event) {
-                        _initCarousel();
-                        $viewthumbs.addClass('rg-view-selected');
-                        $viewfull.removeClass('rg-view-selected');
-                        mode = 'carousel';
-                        return false;
-                    });
 
                 },
                 _addImageWrapper = function () {
